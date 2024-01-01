@@ -59,10 +59,8 @@ func TestSmsProvider(t *testing.T) {
 					Sender: "test_sender",
 				},
 				QCloudSms: conf.QcloudSmsProviderConfiguration{
-					SecretID:  "test_secret_id",
-					SecretKey: "test_secret_key",
-					// SecretID:    "AKIDCE5h5GDyeFdnkW5PaZKq9qKZZN0PZXHo",
-					// SecretKey:   "KQVN1QcbMtGQM4Y1JNDpEPM4ZrwmdVL0",
+					SecretID:    "test_secret_id",
+					SecretKey:   "test_secret_key",
 					TemplateID:  "test_template_id",
 					SmsSdkAppID: "test_sms_sdk_app_id",
 					SignName:    "test_sign_name",
