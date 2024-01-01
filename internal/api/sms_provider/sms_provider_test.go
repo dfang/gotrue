@@ -11,6 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"github.com/supabase/auth/internal/conf"
+	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
+	sms "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms/v20210111"
 	"gopkg.in/h2non/gock.v1"
 )
 
@@ -55,6 +57,13 @@ func TestSmsProvider(t *testing.T) {
 				Textlocal: conf.TextlocalProviderConfiguration{
 					ApiKey: "test_api_key",
 					Sender: "test_sender",
+				},
+				QCloudSms: conf.QcloudSmsProviderConfiguration{
+					SecretID:    "test_secret_id",
+					SecretKey:   "test_secret_key",
+					TemplateID:  "test_template_id",
+					SmsSdkAppID: "test_sms_sdk_app_id",
+					SignName:    "test_sign_name",
 				},
 			},
 		},
@@ -281,6 +290,94 @@ func (ts *SmsProviderTestSuite) TestTwilioVerifySendSms() {
 	for _, c := range cases {
 		ts.Run(c.Desc, func() {
 			_, err = twilioVerifyProvider.SendSms(phone, message, SMSProvider)
+			require.Equal(ts.T(), c.ExpectedError, err)
+		})
+	}
+}
+
+func (ts *SmsProviderTestSuite) TestQCloudSendSms() {
+	defer gock.Off()
+	provider, err := NewQcloudSmsProvider(ts.Config.Sms.QCloudSms)
+	require.NoError(ts.T(), err)
+
+	qcloudProvider, ok := provider.(*QcloudProvider)
+	require.Equal(ts.T(), true, ok)
+
+	phone := "15618903080"
+	message := "110999"
+
+	// body := url.Values{
+	// 	"To":      {"+86" + phone},
+	// 	"Channel": {"sms"},
+	// }
+
+	// phone := "123456789"
+	// message := "This is the sms code: 123456"
+	// body := url.Values{
+	// 	"sender":  {textlocalProvider.Config.Sender},
+	// 	"apikey":  {textlocalProvider.Config.ApiKey},
+	// 	"message": {message},
+	// 	"numbers": {phone},
+	// }
+	cases := []struct {
+		Desc           string
+		TwilioResponse *gock.Response
+		ExpectedError  error
+	}{
+		{
+			Desc: "Successfully sent sms",
+			TwilioResponse: gock.New(qcloudProvider.APIPath).
+				Post("/").
+				// MatchHeader("Authorization", "^TC3-HMAC-SHA256 Credential (.)* Signature=(.)*").
+				// HeaderPresent("Content-Type").
+				// HeaderPresent("X-TC-Action").
+				// MatchHeader("X-TC-Region", "ap-guangzhou").
+				Reply(200).
+				JSON(QcloudSmsResponse{
+					Response: &sms.SendSmsResponseParams{
+						SendStatusSet: []*sms.SendStatus{
+							{
+								PhoneNumber: common.StringPtr("+86" + phone),
+								Code:        common.StringPtr("ok"),
+								Message:     common.StringPtr("send success"),
+								IsoCode:     common.StringPtr("CN"),
+							},
+						},
+						RequestId: common.StringPtr("request_id"),
+					},
+				}),
+			// JSON(SmsStatus{
+			// 	To: "+" + phone,
+			// 	// From:   qcloudProvider.Config.MessageServiceSid,
+			// 	Status: "sent",
+			// 	Body:   message,
+			// }),
+			ExpectedError: nil,
+		},
+		// {"Response":{"SendStatusSet":[{"SerialNo":"3369:15051191117040689090090308","PhoneNumber":"+8615618903080","Fee":1,"SessionContext":"","Code":"Ok","Message":"send success","IsoCode":"CN"}],"RequestId":"3ea30583-fa02-4ac1-9564-f47846856d18"}}
+		// {
+		// 	Desc: "Non-2xx status code returned",
+		// 	TwilioResponse: gock.New(qcloudProvider.APIPath).Post("").
+		// 		MatchHeader("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(qcloudProvider.Config.AccountSid+":"+qcloudProvider.Config.AuthToken))).
+		// 		MatchType("url").BodyString(body.Encode()).
+		// 		Reply(500).JSON(twilioErrResponse{
+		// 		Code:     500,
+		// 		Message:  "Internal server error",
+		// 		MoreInfo: "error",
+		// 		Status:   500,
+		// 	}),
+		// 	ExpectedError: &twilioErrResponse{
+		// 		Code:     500,
+		// 		Message:  "Internal server error",
+		// 		MoreInfo: "error",
+		// 		Status:   500,
+		// 	},
+		// },
+	}
+
+	for _, c := range cases {
+		ts.Run(c.Desc, func() {
+			_, err = qcloudProvider.SendSms(phone, message, SMSProvider)
 			require.Equal(ts.T(), c.ExpectedError, err)
 		})
 	}

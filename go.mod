@@ -74,6 +74,8 @@ require (
 	github.com/jackc/pgx/v4 v4.17.2
 	github.com/supabase/hibp v0.0.0-20231124125943-d225752ae869
 	github.com/supabase/mailme v0.0.0-20230628061017-01f68480c747
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.828
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms v1.0.828
 	github.com/xeipuuv/gojsonschema v1.2.0
 )
 
