@@ -41,6 +41,8 @@ func GetSmsProvider(config conf.GlobalConfiguration) (SmsProvider, error) {
 		return NewVonageProvider(config.Sms.Vonage)
 	case "twilio_verify":
 		return NewTwilioVerifyProvider(config.Sms.TwilioVerify)
+	case "qcloud_sms":
+		return NewQcloudSmsProvider(config.Sms.QCloudSms)
 	default:
 		return nil, fmt.Errorf("sms Provider %s could not be found", name)
 	}

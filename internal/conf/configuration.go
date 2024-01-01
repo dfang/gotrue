@@ -341,6 +341,7 @@ type SmsProviderConfiguration struct {
 	Messagebird  MessagebirdProviderConfiguration  `json:"messagebird"`
 	Textlocal    TextlocalProviderConfiguration    `json:"textlocal"`
 	Vonage       VonageProviderConfiguration       `json:"vonage"`
+	QCloudSms    QcloudSmsProviderConfiguration    `json:"qcloud_sms"`
 }
 
 func (c *SmsProviderConfiguration) GetTestOTP(phone string, now time.Time) (string, bool) {
@@ -368,6 +369,14 @@ type TwilioVerifyProviderConfiguration struct {
 type MessagebirdProviderConfiguration struct {
 	AccessKey  string `json:"access_key" split_words:"true"`
 	Originator string `json:"originator" split_words:"true"`
+}
+
+type QcloudSmsProviderConfiguration struct {
+	SecretID    string `json:"secret_id" split_words:"true"`
+	SecretKey   string `json:"secret_key" split_words:"true"`
+	SmsSdkAppID string `json:"smsSdkAppId" split_words:"true"`
+	TemplateID  string `json:"template_id" split_words:"true"`
+	SignName    string `json:"sign_name" split_words:"true"`
 }
 
 type TextlocalProviderConfiguration struct {
@@ -776,6 +785,19 @@ func (t *VonageProviderConfiguration) Validate() error {
 	}
 	if t.From == "" {
 		return errors.New("missing Vonage 'from' parameter")
+	}
+	return nil
+}
+
+func (t *QcloudSmsProviderConfiguration) Validate() error {
+	if t.SecretID == "" {
+		return errors.New("missing qcloud sms secretId")
+	}
+	if t.SecretKey == "" {
+		return errors.New("missing qcloud sms secretKey")
+	}
+	if t.SmsSdkAppID == "" {
+		return errors.New("missing qcloud sms sdkAppID")
 	}
 	return nil
 }
